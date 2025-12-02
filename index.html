@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pengumuman hasil tes wawancara UKM MAPAKTI</title>
+  <style>
+    body { font-family: Inter, Arial, sans-serif; background:#f4f6fb; padding:20px; display:flex; justify-content:center; }
+    .container { width:100%; max-width:720px; background:#fff; padding:24px; border-radius:12px; box-shadow:0 6px 18px rgba(20,30,80,0.08);}
+    h1 { margin:0 0 10px 0; font-size:20px; }
+    label { display:block; margin-top:10px; }
+    input[type=text] { width:100%; padding:10px; border-radius:6px; border:1px solid #d6d8e0; font-size:16px; }
+    button { margin-top:12px; padding:10px 14px; border-radius:8px; border:0; background:#2563eb; color:#fff; font-weight:600; cursor:pointer; }
+    .card { margin-top:18px; padding:16px; border-radius:10px; border:1px solid #eee; background:#fbfdff; }
+    .status-lulus { color: #075e33; font-weight:800; background:#e6f8ec; padding:6px 8px; border-radius:6px; display:inline-block; }
+    .status-tidak { color:#7f1d1d; font-weight:800; background:#ffecec; padding:6px 8px; border-radius:6px; display:inline-block; }
+    .muted { color:#6b7280; font-size:14px; margin-top:8px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pengumuman hasil tes wawancara UKM MAPAKTI</h1>
+    <p class="muted">Masukkan nomor pendaftaran untuk melihat hasil.</p>
+
+    <label for="nomor">Nomor</label>
+    <input id="nomor" type="text" placeholder="Contoh: 001" />
+
+    <button id="cekBtn">Cek Hasil</button>
+
+    <div id="hasil" class="card" style="display:none;">
+      <div id="nama"></div>
+      <div id="status" style="margin-top:8px;"></div>
+      <div id="alasan" style="margin-top:10px;"></div>
+    </div>
+
+    <p class="muted" style="margin-top:12px;">Jika hasil tidak ditemukan, pastikan nomor yang dimasukkan benar.</p>
+  </div>
+
+<script>
+document.getElementById('cekBtn').addEventListener('click', async () => {
+  const nomor = document.getElementById('nomor').value.trim();
+  const hasilBox = document.getElementById('hasil');
+  const namaEl = document.getElementById('nama');
+  const statusEl = document.getElementById('status');
+  const alasanEl = document.getElementById('alasan');
+  hasilBox.style.display = 'none';
+  namaEl.textContent = statusEl.textContent = alasanEl.textContent = '';
+
+  if (!nomor) {
+    alert('Isi nomor terlebih dahulu.');
+    return;
+  }
+
+  try {
+    const res = await fetch(`/cek?nomor=${encodeURIComponent(nomor)}`);
+    if (!res.ok) {
+      const data = await res.json().catch(()=>({}));
+      alert(data.message || data.error || 'Nomor tidak ditemukan');
+      return;
+    }
+    const data = await res.json();
+    namaEl.innerHTML = '<strong>Nama:</strong> ' + (data.nama || '-');
+    if ((data.status || '').toUpperCase() === 'LULUS') {
+      statusEl.innerHTML = '<span class="status-lulus">DINYATAKAN LULUS</span>';
+      alasanEl.innerHTML = '<div class="muted">Selamat! Silakan cek instruksi daftar ulang pada pengumuman resmi.</div>';
+    } else {
+      statusEl.innerHTML = '<span class="status-tidak">DINYATAKAN TIDAK LULUS</span>';
+      alasanEl.innerHTML = '<strong>Alasan:</strong> ' + (data.alasan || '-');
+    }
+    hasilBox.style.display = 'block';
+  } catch (err) {
+    console.error(err);
+    alert('Terjadi kesalahan saat memeriksa hasil. Coba lagi.');
+  }
+});
+</script>
+</body>
+</html>
